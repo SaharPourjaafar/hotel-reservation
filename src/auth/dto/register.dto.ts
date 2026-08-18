@@ -1,11 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsEmail,
-  IsNotEmpty,
-  IsString,
-  MinLength,
-  Matches,
-} from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsIranianPhone } from '../../common/decorators/is-iranian-phone.decorator';
+import { IsStrongPassword } from '../../common/decorators/is-strong-password.decorator';
 
 export class RegisterDto {
   @ApiProperty({
@@ -28,9 +24,7 @@ export class RegisterDto {
     example: '09123456789',
     description: 'User phone number',
   })
-  @Matches(/^09\d{9}$/, {
-    message: 'Phone number must be a valid Iranian phone number',
-  })
+  @IsIranianPhone()
   @IsString()
   @IsNotEmpty()
   phoneNumber!: string;
@@ -47,14 +41,7 @@ export class RegisterDto {
     description: 'User password (minimum 6 characters)',
     minLength: 6,
   })
-  @Matches(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-    {
-      message:
-        'Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character',
-    },
-  )
+  @IsStrongPassword()
   @IsString()
-  @MinLength(6)
   password!: string;
 }

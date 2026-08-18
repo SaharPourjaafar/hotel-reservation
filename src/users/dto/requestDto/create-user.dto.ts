@@ -1,12 +1,8 @@
-import {
-  IsEmail,
-  IsEnum,
-  IsNotEmpty,
-  IsString,
-  Matches,
-} from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '../../enums/user-role.enum';
+import { IsIranianPhone } from '../../../common/decorators/is-iranian-phone.decorator';
+import { IsStrongPassword } from '../../../common/decorators/is-strong-password.decorator';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -27,9 +23,7 @@ export class CreateUserDto {
   @ApiProperty({
     example: '09148726534',
   })
-  @Matches(/^09\d{9}$/, {
-    message: 'Phone number must be a valid Iranian phone number',
-  })
+  @IsIranianPhone()
   @IsString()
   @IsNotEmpty()
   phoneNumber!: string;
@@ -44,13 +38,7 @@ export class CreateUserDto {
   @ApiProperty({
     example: 'Test@1234',
   })
-  @Matches(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-    {
-      message:
-        'Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character',
-    },
-  )
+  @IsStrongPassword()
   @IsString()
   @IsNotEmpty()
   password!: string;
