@@ -22,6 +22,10 @@ import { ReservationSortField } from './dto/requestDto/filter-reservation.dto';
 
 import { ReservationResponseDto } from './dto/responseDto/reservation-response.dto';
 import { ReservationStatus } from './enums/reservation-status.enum';
+import {
+  getPagination,
+  getPaginationMeta,
+} from '../common/utils/pagination.utils';
 
 @Injectable()
 export class ReservationsService {
@@ -131,10 +135,6 @@ export class ReservationsService {
 
     // 9. ذخیره
     await this.reservationsRepository.save(reservation);
-
-    return {
-      message: 'Reservation created successfully',
-    };
   }
 
   async findAll(filterDto: FilterReservationDto) {
@@ -213,11 +213,10 @@ export class ReservationsService {
     }
 
     // Pagination
-    const page = filterDto.page ?? 1;
-    const limit = filterDto.limit ?? 10;
-
-    const skip = (page - 1) * limit;
-
+    const { page, limit, skip } = getPagination(
+      filterDto.page,
+      filterDto.limit,
+    );
     // Sorting
     const sortBy = filterDto.sortBy ?? ReservationSortField.ID;
 
@@ -227,19 +226,11 @@ export class ReservationsService {
 
     const [reservations, total] = await query.getManyAndCount();
 
-    const totalPages = Math.ceil(total / limit);
-
     return {
       data: reservations.map((reservation) =>
         this.toReservationResponse(reservation),
       ),
-
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages,
-      },
+      meta: getPaginationMeta(page, limit, total),
     };
   }
 

@@ -30,9 +30,9 @@ import { UpdateReservationDto } from './dto/requestDto/update-reservation.dto';
 import { FilterReservationDto } from './dto/requestDto/filter-reservation.dto';
 
 import { Roles } from '../common/decorators/roles.decorator';
-import { RolesGuard } from '../common/guards/roles.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { UserRole } from '../users/enums/user-role.enum';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 import { ReservationResponseDto } from './dto/responseDto/reservation-response.dto';
 import { ReservationListResponseDto } from './dto/responseDto/reservation-list-response.dto';

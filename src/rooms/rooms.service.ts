@@ -15,6 +15,10 @@ import {
   RoomSortField,
   SortOrder,
 } from './dto/requestDto/filter-room.dto';
+import {
+  getPagination,
+  getPaginationMeta,
+} from '../common/utils/pagination.utils';
 
 @Injectable()
 export class RoomsService {
@@ -81,11 +85,10 @@ export class RoomsService {
         minCapacity: filterDto.minCapacity,
       });
     }
-
-    const page = filterDto.page ?? 1;
-    const limit = filterDto.limit ?? 10;
-
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = getPagination(
+      filterDto.page,
+      filterDto.limit,
+    );
 
     const sortBy = filterDto.sortBy ?? RoomSortField.ID;
     const order = filterDto.order ?? SortOrder.ASC;
@@ -94,16 +97,9 @@ export class RoomsService {
 
     const [rooms, total] = await query.getManyAndCount();
 
-    const totalPages = Math.ceil(total / limit);
-
     return {
       data: rooms.map((room) => this.toRoomResponse(room)),
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages,
-      },
+      meta: getPaginationMeta(page, limit, total),
     };
   }
 

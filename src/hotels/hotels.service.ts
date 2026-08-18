@@ -7,6 +7,10 @@ import { UpdateHotelDto } from './dto/requestDto/update-hotel.dto';
 import { FilterHotelDto } from './dto/requestDto/filter-hotel.dto';
 import { HotelSortField } from './enums/hotel-sort-field.enum';
 import { HotelResponseDto } from './dto/responseDto/hotel-response.dto';
+import {
+  getPagination,
+  getPaginationMeta,
+} from '../common/utils/pagination.utils';
 
 @Injectable()
 export class HotelsService {
@@ -48,11 +52,10 @@ export class HotelsService {
     }
 
     // Pagination
-    const page = filterDto.page ?? 1;
-    const limit = filterDto.limit ?? 10;
-
-    const skip = (page - 1) * limit;
-
+    const { page, limit, skip } = getPagination(
+      filterDto.page,
+      filterDto.limit,
+    );
     // Sort
     const sortBy = filterDto.sortBy ?? HotelSortField.ID;
     const order = filterDto.order ?? 'ASC';
@@ -63,17 +66,9 @@ export class HotelsService {
     const [hotels, total] = await query.getManyAndCount();
 
     // Calculate total pages
-    const totalPages = Math.ceil(total / limit);
-
     return {
       data: hotels.map((hotel) => this.toHotelResponse(hotel)),
-
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages,
-      },
+      meta: getPaginationMeta(page, limit, total),
     };
   }
 

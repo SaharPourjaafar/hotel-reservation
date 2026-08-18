@@ -11,6 +11,10 @@ import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/requestDto/update-user.dto';
 import { UserResponseDto } from './dto/responseDto/user-response.dto';
 import { FilterUserDto, UserSortField } from './dto/requestDto/filter-user.dto';
+import {
+  getPagination,
+  getPaginationMeta,
+} from '../common/utils/pagination.utils';
 
 @Injectable()
 export class UsersService {
@@ -48,10 +52,10 @@ export class UsersService {
       });
     }
 
-    const page = filterDto.page ?? 1;
-    const limit = filterDto.limit ?? 10;
-
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = getPagination(
+      filterDto.page,
+      filterDto.limit,
+    );
 
     const sortBy = filterDto.sortBy ?? UserSortField.ID;
     const order = filterDto.order ?? 'ASC';
@@ -60,16 +64,9 @@ export class UsersService {
 
     const [users, total] = await query.getManyAndCount();
 
-    const totalPages = Math.ceil(total / limit);
-
     return {
       data: users.map((user) => this.toUserResponse(user)),
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages,
-      },
+      meta: getPaginationMeta(page, limit, total),
     };
   }
   async create(data: Partial<User>): Promise<User> {
