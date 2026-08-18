@@ -26,6 +26,7 @@ import {
   getPagination,
   getPaginationMeta,
 } from '../common/utils/pagination.utils';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class ReservationsService {
@@ -38,103 +39,115 @@ export class ReservationsService {
 
     @InjectRepository(Room)
     private readonly roomsRepository: Repository<Room>,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(createReservationDto: CreateReservationDto) {
-    const { userId, roomId, checkIn, checkOut, guestCount } =
-      createReservationDto;
+    return this.dataSource.transaction(async (manager) => {
+      const { userId, roomId, checkIn, checkOut, guestCount } =
+        createReservationDto;
 
-    // 1. پیدا کردن User
-    const user = await this.usersRepository.findOne({
-      where: { id: userId },
-    });
+      // 1. پیدا کردن User
+      const userRepository = manager.getRepository(User);
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+      const user = await userRepository.findOne({
+        where: { id: userId },
+      });
 
-    // 2. پیدا کردن Room
-    const room = await this.roomsRepository.findOne({
-      where: { id: roomId },
-    });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
 
-    if (!room) {
-      throw new NotFoundException('Room not found');
-    }
+      // 2. پیدا کردن Room
+      const roomRepository = manager.getRepository(Room);
 
-    // بررسی وضعیت اتاق
-    if (room.status !== RoomStatus.AVAILABLE) {
-      throw new BadRequestException('Room is not available');
-    }
+      const room = await roomRepository.findOne({
+        where: { id: roomId },
+      });
 
-    // 3. تبدیل تاریخ‌ها
-    const checkInDate = new Date(checkIn);
-    const checkOutDate = new Date(checkOut);
+      if (!room) {
+        throw new NotFoundException('Room not found');
+      }
 
-    // 4. بررسی ترتیب تاریخ
-    if (checkOutDate <= checkInDate) {
-      throw new BadRequestException(
-        'Check-out date must be after check-in date',
+      // 3. بررسی وضعیت اتاق
+      if (room.status !== RoomStatus.AVAILABLE) {
+        throw new BadRequestException('Room is not available');
+      }
+
+      // 4. تبدیل تاریخ‌ها
+      const checkInDate = new Date(checkIn);
+      const checkOutDate = new Date(checkOut);
+
+      // 5. بررسی ترتیب تاریخ
+      if (checkOutDate <= checkInDate) {
+        throw new BadRequestException(
+          'Check-out date must be after check-in date',
+        );
+      }
+
+      // 6. بررسی گذشته نبودن Check-in
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (checkInDate < today) {
+        throw new BadRequestException('Check-in date cannot be in the past');
+      }
+
+      // 7. بررسی ظرفیت
+      if (guestCount > room.capacity) {
+        throw new BadRequestException('Guest count exceeds room capacity');
+      }
+
+      // 8. بررسی تداخل رزرو
+      const reservationRepository = manager.getRepository(Reservation);
+
+      const overlappingReservation = await reservationRepository
+        .createQueryBuilder('reservation')
+        .where('reservation.roomId = :roomId', {
+          roomId,
+        })
+        .andWhere('reservation.checkIn < :checkOut', {
+          checkOut: checkOutDate,
+        })
+        .andWhere('reservation.checkOut > :checkIn', {
+          checkIn: checkInDate,
+        })
+        .andWhere('reservation.status IN (:...statuses)', {
+          statuses: [ReservationStatus.PENDING, ReservationStatus.CONFIRMED],
+        })
+        .getOne();
+
+      if (overlappingReservation) {
+        throw new ConflictException('Room is already reserved for these dates');
+      }
+
+      // 9. محاسبه تعداد شب‌ها
+      const millisecondsPerDay = 1000 * 60 * 60 * 24;
+
+      const nights = Math.ceil(
+        (checkOutDate.getTime() - checkInDate.getTime()) / millisecondsPerDay,
       );
-    }
 
-    // بررسی اینکه check-in در گذشته نباشد
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+      // 10. محاسبه قیمت
+      const totalPrice = nights * Number(room.price);
 
-    if (checkInDate < today) {
-      throw new BadRequestException('Check-in date cannot be in the past');
-    }
+      // 11. ساخت Reservation
+      const reservation = reservationRepository.create({
+        user,
+        room,
+        checkIn: checkInDate,
+        checkOut: checkOutDate,
+        guestCount,
+        status: ReservationStatus.PENDING,
+        totalPrice,
+      });
 
-    // 5. بررسی ظرفیت اتاق
-    if (guestCount > room.capacity) {
-      throw new BadRequestException('Guest count exceeds room capacity');
-    }
+      // 12. ذخیره Reservation
+      await reservationRepository.save(reservation);
 
-    // بررسی رزروهای تداخل‌دار
-    const overlappingReservation = await this.reservationsRepository
-      .createQueryBuilder('reservation')
-      .where('reservation.roomId = :roomId', {
-        roomId,
-      })
-      .andWhere('reservation.checkIn < :checkOut', {
-        checkOut,
-      })
-      .andWhere('reservation.checkOut > :checkIn', {
-        checkIn,
-      })
-      .andWhere('reservation.status IN (:...statuses)', {
-        statuses: [ReservationStatus.PENDING, ReservationStatus.CONFIRMED],
-      })
-      .getOne();
-
-    if (overlappingReservation) {
-      throw new ConflictException('Room is already reserved for these dates');
-    }
-
-    // 6. محاسبه تعداد شب‌ها
-    const millisecondsPerDay = 1000 * 60 * 60 * 24;
-
-    const nights = Math.ceil(
-      (checkOutDate.getTime() - checkInDate.getTime()) / millisecondsPerDay,
-    );
-
-    // 7. محاسبه قیمت کل
-    const totalPrice = nights * Number(room.price);
-
-    // 8. ساخت Reservation
-    const reservation = this.reservationsRepository.create({
-      user,
-      room,
-      checkIn: checkInDate,
-      checkOut: checkOutDate,
-      guestCount,
-      status: ReservationStatus.PENDING,
-      totalPrice,
+      return;
     });
-
-    // 9. ذخیره
-    await this.reservationsRepository.save(reservation);
   }
 
   async findAll(filterDto: FilterReservationDto) {
