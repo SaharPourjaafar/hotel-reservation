@@ -11,18 +11,8 @@ import { Type } from 'class-transformer';
 
 import { RoomType } from '../../enums/room-type.enum';
 import { RoomStatus } from '../../enums/room-status.enum';
-
-export enum RoomSortField {
-  ID = 'id',
-  ROOM_NUMBER = 'roomNumber',
-  PRICE = 'price',
-  CAPACITY = 'capacity',
-}
-
-export enum SortOrder {
-  ASC = 'ASC',
-  DESC = 'DESC',
-}
+import { RoomSortField } from 'src/rooms/enums/room-sortfield.enum';
+import { SortOrder } from 'src/rooms/enums/room-sortorder.enum';
 
 export class FilterRoomDto {
   @ApiPropertyOptional({

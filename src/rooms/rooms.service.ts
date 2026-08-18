@@ -10,15 +10,13 @@ import { UpdateRoomDto } from './dto/requestDto/update-room.dto';
 import { AvailableRoomDto } from './dto/requestDto/available-room.dto';
 import { ReservationStatus } from '../reservations/enums/reservation-status.enum';
 import { RoomResponseDto } from './dto/responseDto/room-response.dto';
-import {
-  FilterRoomDto,
-  RoomSortField,
-  SortOrder,
-} from './dto/requestDto/filter-room.dto';
+import { FilterRoomDto } from './dto/requestDto/filter-room.dto';
 import {
   getPagination,
   getPaginationMeta,
 } from '../common/utils/pagination.utils';
+import { RoomSortField } from './enums/room-sortfield.enum';
+import { SortOrder } from './enums/room-sortorder.enum';
 
 @Injectable()
 export class RoomsService {

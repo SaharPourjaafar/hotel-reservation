@@ -12,13 +12,7 @@ import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 import { ReservationStatus } from '../../enums/reservation-status.enum';
-
-export enum ReservationSortField {
-  ID = 'id',
-  CHECK_IN = 'checkIn',
-  CHECK_OUT = 'checkOut',
-  TOTAL_PRICE = 'totalPrice',
-}
+import { ReservationSortField } from '../../enums/reservation-sortfield';
 
 export class FilterReservationDto {
   @ApiPropertyOptional({

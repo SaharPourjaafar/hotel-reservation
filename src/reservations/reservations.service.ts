@@ -18,7 +18,7 @@ import { FilterReservationDto } from './dto/requestDto/filter-reservation.dto';
 
 import { RoomStatus } from '../rooms/enums/room-status.enum';
 
-import { ReservationSortField } from './dto/requestDto/filter-reservation.dto';
+import { ReservationSortField } from './enums/reservation-sortfield';
 
 import { ReservationResponseDto } from './dto/responseDto/reservation-response.dto';
 import { ReservationStatus } from './enums/reservation-status.enum';
