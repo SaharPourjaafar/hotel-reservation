@@ -14,7 +14,6 @@ import {
   ApiTags,
   ApiOperation,
   ApiBearerAuth,
-  ApiCreatedResponse,
   ApiOkResponse,
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
@@ -29,7 +28,6 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { UserResponseDto } from './dto/responseDto/user-response.dto';
 import { FilterUserDto } from './dto/requestDto/filter-user.dto';
 import { UserListResponseDto } from './dto/responseDto/user-list-response.dto';
-import { MessageResponseDto } from './dto/responseDto/message-response.dto';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -56,9 +54,6 @@ export class UsersController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new user' })
-  @ApiCreatedResponse({
-    type: MessageResponseDto,
-  })
   @ApiBadRequestResponse({
     description: 'Invalid user data',
   })
@@ -71,12 +66,8 @@ export class UsersController {
   @ApiInternalServerErrorResponse({
     description: 'Internal server error',
   })
-  async create(@Body() createUserDto: CreateUserDto) {
+  async create(@Body() createUserDto: CreateUserDto): Promise<void> {
     await this.usersService.create(createUserDto);
-
-    return {
-      message: 'User created successfully',
-    };
   }
 
   @Get(':id')
@@ -105,7 +96,6 @@ export class UsersController {
   @ApiOperation({ summary: 'Update user' })
   @ApiOkResponse({
     description: 'User updated successfully',
-    type: MessageResponseDto,
   })
   @ApiBadRequestResponse({
     description: 'Invalid user data',
@@ -122,18 +112,17 @@ export class UsersController {
   @ApiInternalServerErrorResponse({
     description: 'Internal server error',
   })
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
-  ) {
-    return this.usersService.update(id, updateUserDto);
+  ): Promise<void> {
+    await this.usersService.update(id, updateUserDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete user' })
   @ApiOkResponse({
     description: 'User deleted successfully',
-    type: MessageResponseDto,
   })
   @ApiBadRequestResponse({
     description: 'Invalid user ID',
@@ -147,7 +136,7 @@ export class UsersController {
   @ApiInternalServerErrorResponse({
     description: 'Internal server error',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    await this.usersService.remove(id);
   }
 }

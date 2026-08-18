@@ -117,10 +117,6 @@ export class UsersService {
     }
 
     await this.usersRepository.save(user);
-
-    return {
-      message: 'User updated successfully',
-    };
   }
 
   async remove(id: number) {
@@ -129,10 +125,6 @@ export class UsersService {
     if (result.affected === 0) {
       throw new NotFoundException('User not found');
     }
-
-    return {
-      message: 'User deleted successfully',
-    };
   }
 
   async findByEmail(email: string): Promise<User | null> {

@@ -2,9 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Hotel } from './entities/hotel.entity';
-import { CreateHotelDto } from './dto/create-hotel.dto';
-import { UpdateHotelDto } from './dto/update-hotel.dto';
-import { FilterHotelDto } from './dto/filter-hotel.dto';
+import { CreateHotelDto } from './dto/requestDto/create-hotel.dto';
+import { UpdateHotelDto } from './dto/requestDto/update-hotel.dto';
+import { FilterHotelDto } from './dto/requestDto/filter-hotel.dto';
 import { HotelSortField } from './enums/hotel-sort-field.enum';
 import { HotelResponseDto } from './dto/responseDto/hotel-response.dto';
 
@@ -15,7 +15,7 @@ export class HotelsService {
     private readonly hotelsRepository: Repository<Hotel>,
   ) {}
 
-  async findAll(filterDto: FilterHotelDto) {
+  async getPaginatedHotels(filterDto: FilterHotelDto) {
     const query = this.hotelsRepository.createQueryBuilder('hotel');
 
     if (filterDto.search) {
@@ -92,10 +92,6 @@ export class HotelsService {
     const hotel = this.hotelsRepository.create(createHotelDto);
 
     await this.hotelsRepository.save(hotel);
-
-    return {
-      message: 'Hotel created successfully',
-    };
   }
 
   async update(id: number, updateHotelDto: UpdateHotelDto) {
@@ -109,10 +105,6 @@ export class HotelsService {
     }
 
     await this.hotelsRepository.save(hotel);
-
-    return {
-      message: 'Hotel updated successfully',
-    };
   }
 
   async remove(id: number) {
@@ -121,10 +113,6 @@ export class HotelsService {
     if (result.affected === 0) {
       throw new NotFoundException('Hotel not found');
     }
-
-    return {
-      message: 'Hotel deleted successfully',
-    };
   }
   private toHotelResponse(hotel: Hotel): HotelResponseDto {
     return {

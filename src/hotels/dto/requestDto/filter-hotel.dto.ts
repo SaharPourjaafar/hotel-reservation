@@ -9,7 +9,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { HotelSortField } from '../enums/hotel-sort-field.enum';
+import { HotelSortField } from '../../enums/hotel-sort-field.enum';
 
 export class FilterHotelDto {
   @ApiPropertyOptional({

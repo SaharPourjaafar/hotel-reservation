@@ -31,7 +31,6 @@ import { AvailableRoomDto } from './dto/requestDto/available-room.dto';
 import { RoomResponseDto } from './dto/responseDto/room-response.dto';
 import { RoomListResponseDto } from './dto/responseDto/room-list-response.dto';
 import { FilterRoomDto } from './dto/requestDto/filter-room.dto';
-import { RoomMessageResponseDto } from './dto/responseDto/room-message-response.dto';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -96,7 +95,6 @@ export class RoomsController {
   @ApiOperation({ summary: 'Create a new room' })
   @ApiCreatedResponse({
     description: 'Room created successfully',
-    type: RoomMessageResponseDto,
   })
   @ApiBadRequestResponse({
     description: 'Invalid room data',
@@ -110,15 +108,14 @@ export class RoomsController {
   @ApiInternalServerErrorResponse({
     description: 'Internal server error',
   })
-  create(@Body() createRoomDto: CreateRoomDto) {
-    return this.roomsService.create(createRoomDto);
+  async create(@Body() createRoomDto: CreateRoomDto): Promise<void> {
+    await this.roomsService.create(createRoomDto);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update room' })
   @ApiOkResponse({
     description: 'Room updated successfully',
-    type: RoomMessageResponseDto,
   })
   @ApiBadRequestResponse({
     description: 'Invalid room data',
@@ -132,11 +129,11 @@ export class RoomsController {
   @ApiInternalServerErrorResponse({
     description: 'Internal server error',
   })
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateRoomDto: UpdateRoomDto,
-  ) {
-    return this.roomsService.update(id, updateRoomDto);
+  ): Promise<void> {
+    await this.roomsService.update(id, updateRoomDto);
   }
 
   @Delete(':id')
@@ -153,7 +150,7 @@ export class RoomsController {
   @ApiInternalServerErrorResponse({
     description: 'Internal server error',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.roomsService.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    await this.roomsService.remove(id);
   }
 }

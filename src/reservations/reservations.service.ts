@@ -273,10 +273,6 @@ export class ReservationsService {
     }
 
     await this.reservationsRepository.save(reservation);
-
-    return {
-      message: 'Reservation updated successfully',
-    };
   }
 
   private toReservationResponse(

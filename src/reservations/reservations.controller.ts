@@ -36,7 +36,6 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 import { ReservationResponseDto } from './dto/responseDto/reservation-response.dto';
 import { ReservationListResponseDto } from './dto/responseDto/reservation-list-response.dto';
-import { MessageResponseDto } from './dto/responseDto/message-response.dto';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -51,7 +50,6 @@ export class ReservationsController {
   })
   @ApiCreatedResponse({
     description: 'Reservation created successfully',
-    type: MessageResponseDto,
   })
   @ApiBadRequestResponse({
     description:
@@ -69,8 +67,10 @@ export class ReservationsController {
   @ApiInternalServerErrorResponse({
     description: 'Internal server error',
   })
-  create(@Body() createReservationDto: CreateReservationDto) {
-    return this.reservationsService.create(createReservationDto);
+  async create(
+    @Body() createReservationDto: CreateReservationDto,
+  ): Promise<void> {
+    await this.reservationsService.create(createReservationDto);
   }
 
   @Get()
@@ -120,7 +120,6 @@ export class ReservationsController {
   })
   @ApiOkResponse({
     description: 'Reservation updated successfully',
-    type: MessageResponseDto,
   })
   @ApiBadRequestResponse({
     description: 'Invalid reservation status',
@@ -134,10 +133,10 @@ export class ReservationsController {
   @ApiInternalServerErrorResponse({
     description: 'Internal server error',
   })
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateReservationDto: UpdateReservationDto,
-  ) {
-    return this.reservationsService.update(id, updateReservationDto);
+  ): Promise<void> {
+    await this.reservationsService.update(id, updateReservationDto);
   }
 }

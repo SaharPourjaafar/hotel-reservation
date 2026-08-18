@@ -197,10 +197,6 @@ export class RoomsService {
     });
 
     await this.roomsRepository.save(room);
-
-    return {
-      message: 'Room created successfully',
-    };
   }
 
   async update(id: number, updateRoomDto: UpdateRoomDto) {
@@ -247,10 +243,6 @@ export class RoomsService {
     }
 
     await this.roomsRepository.save(room);
-
-    return {
-      message: 'Room updated successfully',
-    };
   }
 
   async remove(id: number) {
@@ -259,10 +251,6 @@ export class RoomsService {
     if (result.affected === 0) {
       throw new NotFoundException('Room not found');
     }
-
-    return {
-      message: 'Room deleted successfully',
-    };
   }
   private toRoomResponse(room: Room): RoomResponseDto {
     return {

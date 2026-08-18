@@ -24,11 +24,11 @@ import {
 } from '@nestjs/swagger';
 
 import { HotelsService } from './hotels.service';
-import { CreateHotelDto } from './dto/create-hotel.dto';
-import { UpdateHotelDto } from './dto/update-hotel.dto';
+import { CreateHotelDto } from './dto/requestDto/create-hotel.dto';
+import { UpdateHotelDto } from './dto/requestDto/update-hotel.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { Query } from '@nestjs/common';
-import { FilterHotelDto } from './dto/filter-hotel.dto';
+import { FilterHotelDto } from './dto/requestDto/filter-hotel.dto';
 import { HotelResponseDto } from './dto/responseDto/hotel-response.dto';
 import { HotelListResponseDto } from './dto/responseDto/hotel-list-response.dto';
 
@@ -45,8 +45,8 @@ export class HotelsController {
     description: 'Hotels retrieved successfully',
     type: HotelListResponseDto,
   })
-  findAll(@Query() filterDto: FilterHotelDto) {
-    return this.hotelsService.findAll(filterDto);
+  paginated(@Query() filterDto: FilterHotelDto) {
+    return this.hotelsService.getPaginatedHotels(filterDto);
   }
   @ApiUnauthorizedResponse({
     description: 'Unauthorized',
@@ -54,25 +54,6 @@ export class HotelsController {
   @ApiInternalServerErrorResponse({
     description: 'Internal server error',
   })
-  @Get(':id')
-  @ApiOperation({ summary: 'Get hotel by id' })
-  @ApiOkResponse({
-    description: 'Hotel retrieved successfully',
-    type: HotelResponseDto,
-  })
-  @ApiUnauthorizedResponse({
-    description: 'Unauthorized',
-  })
-  @ApiNotFoundResponse({
-    description: 'Hotel not found',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error',
-  })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.hotelsService.findOne(id);
-  }
-
   @Post()
   @ApiOperation({ summary: 'Create a new hotel' })
   @ApiCreatedResponse({
@@ -90,8 +71,27 @@ export class HotelsController {
   @ApiInternalServerErrorResponse({
     description: 'Internal server error',
   })
-  create(@Body() createHotelDto: CreateHotelDto) {
-    return this.hotelsService.create(createHotelDto);
+  async create(@Body() createHotelDto: CreateHotelDto): Promise<void> {
+    await this.hotelsService.create(createHotelDto);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get hotel by id' })
+  @ApiOkResponse({
+    description: 'Hotel retrieved successfully',
+    type: HotelResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized',
+  })
+  @ApiNotFoundResponse({
+    description: 'Hotel not found',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error',
+  })
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.hotelsService.findOne(id);
   }
 
   @Patch(':id')
@@ -114,11 +114,11 @@ export class HotelsController {
   @ApiInternalServerErrorResponse({
     description: 'Internal server error',
   })
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateHotelDto: UpdateHotelDto,
-  ) {
-    return this.hotelsService.update(id, updateHotelDto);
+  ): Promise<void> {
+    await this.hotelsService.update(id, updateHotelDto);
   }
 
   @Delete(':id')
@@ -135,7 +135,7 @@ export class HotelsController {
   @ApiInternalServerErrorResponse({
     description: 'Internal server error',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.hotelsService.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    await this.hotelsService.remove(id);
   }
 }
