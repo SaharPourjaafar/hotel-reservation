@@ -3,12 +3,14 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
 import { User } from '../../users/entities/user.entity';
 import { Room } from '../../rooms/entities/room.entity';
 import { ReservationStatus } from '../enums/reservation-status.enum';
+import { CancellationRequest } from './cancellation-request.entity';
 
 @Entity()
 export class Reservation {
@@ -22,6 +24,12 @@ export class Reservation {
   @ManyToOne(() => Room, (room) => room.reservations)
   @JoinColumn({ name: 'roomId' })
   room!: Room;
+
+  @OneToMany(
+    () => CancellationRequest,
+    (cancellationRequest) => cancellationRequest.reservation,
+  )
+  cancellationRequests!: CancellationRequest[];
 
   @Column({ type: 'date' })
   checkIn!: Date;

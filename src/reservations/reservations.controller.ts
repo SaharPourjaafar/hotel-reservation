@@ -36,6 +36,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 import { ReservationResponseDto } from './dto/responseDto/reservation-response.dto';
 import { ReservationListResponseDto } from './dto/responseDto/reservation-list-response.dto';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -91,6 +92,16 @@ export class ReservationsController {
     return this.reservationsService.findAll(filterDto);
   }
 
+  @Get('cancellation-requests')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Get cancellation requests' })
+  @ApiOkResponse({
+    description: 'Cancellation requests retrieved successfully',
+  })
+  findCancellationRequests() {
+    return this.reservationsService.findCancellationRequests();
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get reservation by id',
@@ -110,6 +121,30 @@ export class ReservationsController {
   })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.reservationsService.findOne(id);
+  }
+
+  @Patch('cancellation-requests/:id/approve')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Approve cancellation request' })
+  @ApiOkResponse({
+    description: 'Cancellation request approved successfully',
+  })
+  async approveCancellationRequest(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    await this.reservationsService.approveCancellationRequest(id);
+  }
+
+  @Patch('cancellation-requests/:id/reject')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Reject cancellation request' })
+  @ApiOkResponse({
+    description: 'Cancellation request rejected successfully',
+  })
+  rejectCancellationRequest(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    return this.reservationsService.rejectCancellationRequest(id);
   }
 
   @Patch(':id')
@@ -138,5 +173,19 @@ export class ReservationsController {
     @Body() updateReservationDto: UpdateReservationDto,
   ): Promise<void> {
     await this.reservationsService.update(id, updateReservationDto);
+  }
+  @Post(':id/cancellation-request')
+  @ApiOperation({ summary: 'Request reservation cancellation' })
+  @ApiCreatedResponse({
+    description: 'Cancellation request submitted successfully',
+  })
+  createCancellationRequest(
+    @Param('id', ParseIntPipe) reservationId: number,
+    @CurrentUser() user: { id: number },
+  ): Promise<void> {
+    return this.reservationsService.createCancellationRequest(
+      reservationId,
+      user.id,
+    );
   }
 }

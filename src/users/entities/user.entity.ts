@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Reservation } from '../../reservations/entities/reservation.entity';
 import { UserRole } from '../enums/user-role.enum';
+import { CancellationRequest } from '../../reservations/entities/cancellation-request.entity';
 
 @Entity()
 export class User {
@@ -44,4 +45,10 @@ export class User {
 
   @OneToMany(() => Reservation, (reservation) => reservation.user)
   reservations!: Reservation[];
+
+  @OneToMany(
+    () => CancellationRequest,
+    (cancellationRequest) => cancellationRequest.user,
+  )
+  cancellationRequests!: CancellationRequest[];
 }
