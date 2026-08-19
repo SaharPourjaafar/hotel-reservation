@@ -48,10 +48,9 @@ export class ReservationsService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async create(createReservationDto: CreateReservationDto) {
+  async create(createReservationDto: CreateReservationDto, userId: number) {
     return this.dataSource.transaction(async (manager) => {
-      const { userId, roomId, checkIn, checkOut, guestCount } =
-        createReservationDto;
+      const { rooms, checkIn, checkOut } = createReservationDto;
 
       // 1. پیدا کردن User
       const userRepository = manager.getRepository(User);
@@ -64,34 +63,18 @@ export class ReservationsService {
         throw new NotFoundException('User not found');
       }
 
-      // 2. پیدا کردن Room
-      const roomRepository = manager.getRepository(Room);
-
-      const room = await roomRepository.findOne({
-        where: { id: roomId },
-      });
-
-      if (!room) {
-        throw new NotFoundException('Room not found');
-      }
-
-      // 3. بررسی وضعیت اتاق
-      if (room.status !== RoomStatus.AVAILABLE) {
-        throw new BadRequestException('Room is not available');
-      }
-
-      // 4. تبدیل تاریخ‌ها
+      // 2. تبدیل تاریخ‌ها
       const checkInDate = new Date(checkIn);
       const checkOutDate = new Date(checkOut);
 
-      // 5. بررسی ترتیب تاریخ
+      // 3. بررسی ترتیب تاریخ
       if (checkOutDate <= checkInDate) {
         throw new BadRequestException(
           'Check-out date must be after check-in date',
         );
       }
 
-      // 6. بررسی گذشته نبودن Check-in
+      // 4. بررسی گذشته نبودن Check-in
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -99,62 +82,89 @@ export class ReservationsService {
         throw new BadRequestException('Check-in date cannot be in the past');
       }
 
-      // 7. بررسی ظرفیت
-      if (guestCount > room.capacity) {
-        throw new BadRequestException('Guest count exceeds room capacity');
-      }
-
-      // 8. بررسی تداخل رزرو
-      const reservationRepository = manager.getRepository(Reservation);
-
-      const overlappingReservation = await reservationRepository
-        .createQueryBuilder('reservation')
-        .where('reservation.roomId = :roomId', {
-          roomId,
-        })
-        .andWhere('reservation.checkIn < :checkOut', {
-          checkOut: checkOutDate,
-        })
-        .andWhere('reservation.checkOut > :checkIn', {
-          checkIn: checkInDate,
-        })
-        .andWhere('reservation.status IN (:...statuses)', {
-          statuses: [ReservationStatus.PENDING, ReservationStatus.CONFIRMED],
-        })
-        .getOne();
-
-      if (overlappingReservation) {
-        throw new ConflictException('Room is already reserved for these dates');
-      }
-
-      // 9. محاسبه تعداد شب‌ها
+      // 5. محاسبه تعداد شب‌ها
       const millisecondsPerDay = 1000 * 60 * 60 * 24;
 
       const nights = Math.ceil(
         (checkOutDate.getTime() - checkInDate.getTime()) / millisecondsPerDay,
       );
 
-      // 10. محاسبه قیمت
-      const totalPrice = nights * Number(room.price);
+      const roomRepository = manager.getRepository(Room);
+      const reservationRepository = manager.getRepository(Reservation);
 
-      // 11. ساخت Reservation
-      const reservation = reservationRepository.create({
-        user,
-        room,
-        checkIn: checkInDate,
-        checkOut: checkOutDate,
-        guestCount,
-        status: ReservationStatus.PENDING,
-        totalPrice,
-      });
+      const reservations: Reservation[] = [];
 
-      // 12. ذخیره Reservation
-      await reservationRepository.save(reservation);
+      // 6. بررسی و ساخت Reservation برای هر اتاق
+      for (const requestedRoom of rooms) {
+        // پیدا کردن Room
+        const room = await roomRepository.findOne({
+          where: { id: requestedRoom.roomId },
+        });
+
+        if (!room) {
+          throw new NotFoundException(`Room ${requestedRoom.roomId} not found`);
+        }
+
+        // بررسی وضعیت اتاق
+        if (room.status !== RoomStatus.AVAILABLE) {
+          throw new BadRequestException(
+            `Room ${room.roomNumber} is not available`,
+          );
+        }
+
+        // بررسی ظرفیت
+        if (requestedRoom.guestCount > room.capacity) {
+          throw new BadRequestException(
+            `Guest count exceeds room capacity for room ${room.roomNumber}`,
+          );
+        }
+
+        // بررسی تداخل رزرو
+        const overlappingReservation = await reservationRepository
+          .createQueryBuilder('reservation')
+          .where('reservation.roomId = :roomId', {
+            roomId: room.id,
+          })
+          .andWhere('reservation.checkIn < :checkOut', {
+            checkOut: checkOutDate,
+          })
+          .andWhere('reservation.checkOut > :checkIn', {
+            checkIn: checkInDate,
+          })
+          .andWhere('reservation.status IN (:...statuses)', {
+            statuses: [ReservationStatus.PENDING, ReservationStatus.CONFIRMED],
+          })
+          .getOne();
+
+        if (overlappingReservation) {
+          throw new ConflictException(
+            `Room ${room.roomNumber} is already reserved for these dates`,
+          );
+        }
+
+        // محاسبه قیمت این اتاق
+        const totalPrice = nights * Number(room.price);
+
+        // ساخت Reservation
+        const reservation = reservationRepository.create({
+          user,
+          room,
+          checkIn: checkInDate,
+          checkOut: checkOutDate,
+          guestCount: requestedRoom.guestCount,
+          status: ReservationStatus.PENDING,
+          totalPrice,
+        });
+
+        reservations.push(reservation);
+      }
+
+      // 7. ذخیره تمام Reservationها
+      await reservationRepository.save(reservations);
 
       return;
     });
   }
-
   async findAll(filterDto: FilterReservationDto) {
     const query = this.reservationsRepository
       .createQueryBuilder('reservation')

@@ -37,6 +37,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ReservationResponseDto } from './dto/responseDto/reservation-response.dto';
 import { ReservationListResponseDto } from './dto/responseDto/reservation-list-response.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { CurrentUserType } from '../common/types/current-user-type.type';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -70,8 +71,9 @@ export class ReservationsController {
   })
   async create(
     @Body() createReservationDto: CreateReservationDto,
+    @CurrentUser() user: CurrentUserType,
   ): Promise<void> {
-    await this.reservationsService.create(createReservationDto);
+    await this.reservationsService.create(createReservationDto, user.id);
   }
 
   @Get()

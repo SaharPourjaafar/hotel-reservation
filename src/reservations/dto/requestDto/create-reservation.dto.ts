@@ -1,22 +1,33 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsInt, Min } from 'class-validator';
+import { ReservationRoomDto } from './reservation-room.dto';
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsDateString,
+  ArrayMinSize,
+  ValidateNested,
+} from 'class-validator';
 
 export class CreateReservationDto {
   @ApiProperty({
-    example: 1,
-    description: 'User ID',
+    description: 'List of rooms to reserve',
+    type: [ReservationRoomDto],
+    example: [
+      {
+        roomId: 1,
+        guestCount: 2,
+      },
+      {
+        roomId: 3,
+        guestCount: 3,
+      },
+    ],
   })
-  @IsInt()
-  @Min(1)
-  userId!: number;
-
-  @ApiProperty({
-    example: 3,
-    description: 'Room ID',
-  })
-  @IsInt()
-  @Min(1)
-  roomId!: number;
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => ReservationRoomDto)
+  rooms!: ReservationRoomDto[];
 
   @ApiProperty({
     example: '2026-08-10',
@@ -29,11 +40,4 @@ export class CreateReservationDto {
   })
   @IsDateString()
   checkOut!: string;
-
-  @ApiProperty({
-    example: 2,
-  })
-  @IsInt()
-  @Min(1)
-  guestCount!: number;
 }
