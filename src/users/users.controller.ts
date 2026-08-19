@@ -37,7 +37,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all users' })
+  @ApiOperation({ summary: 'Get users' })
   @ApiOkResponse({
     description: 'Users retrieved successfully',
     type: UserListResponseDto,

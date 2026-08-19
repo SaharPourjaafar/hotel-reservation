@@ -40,7 +40,7 @@ export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all rooms' })
+  @ApiOperation({ summary: 'Get rooms' })
   @ApiOkResponse({
     description: 'Rooms retrieved successfully',
     type: RoomListResponseDto,

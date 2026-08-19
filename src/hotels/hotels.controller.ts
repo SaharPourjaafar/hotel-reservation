@@ -40,7 +40,7 @@ export class HotelsController {
   constructor(private readonly hotelsService: HotelsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all hotels' })
+  @ApiOperation({ summary: 'Get hotels' })
   @ApiOkResponse({
     description: 'Hotels retrieved successfully',
     type: HotelListResponseDto,

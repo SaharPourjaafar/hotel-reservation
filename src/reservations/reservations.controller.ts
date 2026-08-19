@@ -76,7 +76,7 @@ export class ReservationsController {
 
   @Get()
   @ApiOperation({
-    summary: 'Get all reservations',
+    summary: 'Get reservations',
   })
   @ApiOkResponse({
     description: 'Reservations retrieved successfully',
