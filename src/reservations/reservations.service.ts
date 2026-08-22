@@ -338,12 +338,25 @@ export class ReservationsService {
   }
 
   async findCancellationRequests() {
-    return this.cancellationRequestsRepository.find({
-      relations: {
-        user: true,
-        reservation: true,
-      },
-    });
+    return this.cancellationRequestsRepository
+      .createQueryBuilder('request')
+      .leftJoinAndSelect('request.user', 'user')
+      .leftJoinAndSelect('request.reservation', 'reservation')
+      .select([
+        'request.id',
+        'request.status',
+        'request.createdAt',
+
+        'user.id',
+        'user.firstName',
+        'user.lastName',
+
+        'reservation.id',
+        'reservation.checkIn',
+        'reservation.checkOut',
+        'reservation.status',
+      ])
+      .getMany();
   }
 
   async approveCancellationRequest(id: number) {
