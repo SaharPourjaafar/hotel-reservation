@@ -116,12 +116,25 @@ export class UsersService {
     await this.usersRepository.save(user);
   }
 
-  async remove(id: number) {
-    const result = await this.usersRepository.delete(id);
+  async remove(id: number): Promise<void> {
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      relations: {
+        reservations: true,
+      },
+    });
 
-    if (result.affected === 0) {
+    if (!user) {
       throw new NotFoundException('User not found');
     }
+
+    if (user.reservations.length > 0) {
+      throw new ConflictException(
+        'Cannot delete user because the user has existing reservations.',
+      );
+    }
+
+    await this.usersRepository.delete(id);
   }
 
   async findByEmail(email: string): Promise<User | null> {
