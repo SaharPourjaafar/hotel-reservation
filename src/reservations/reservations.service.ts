@@ -29,6 +29,7 @@ import {
 import { DataSource } from 'typeorm';
 import { CancellationRequest } from './entities/cancellation-request.entity';
 import { CancellationRequestStatus } from './enums/cancellation-request-status.enum';
+import { CancellationDecision } from './enums/cancellationDecision.enum';
 
 @Injectable()
 export class ReservationsService {
@@ -48,10 +49,11 @@ export class ReservationsService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async create(createReservationDto: CreateReservationDto, userId: number) {
+  async create(
+    { rooms, checkIn, checkOut }: CreateReservationDto,
+    userId: number,
+  ) {
     return this.dataSource.transaction(async (manager) => {
-      const { rooms, checkIn, checkOut } = createReservationDto;
-
       // 1. پیدا کردن User
       const userRepository = manager.getRepository(User);
 
@@ -359,54 +361,44 @@ export class ReservationsService {
       .getMany();
   }
 
-  async approveCancellationRequest(id: number) {
-    const cancellationRequest =
-      await this.cancellationRequestsRepository.findOne({
+  async handleCancellationRequest(id: number, action: CancellationDecision) {
+    return this.dataSource.transaction(async (manager) => {
+      const cancellationRequest = await manager.findOne(CancellationRequest, {
         where: { id },
         relations: {
           reservation: true,
         },
       });
 
-    if (!cancellationRequest) {
-      throw new NotFoundException('Cancellation request not found');
-    }
+      if (!cancellationRequest) {
+        throw new NotFoundException('Cancellation request not found');
+      }
 
-    if (cancellationRequest.status !== CancellationRequestStatus.PENDING) {
-      throw new BadRequestException(
-        'Cancellation request has already been processed',
-      );
-    }
+      if (cancellationRequest.status !== CancellationRequestStatus.PENDING) {
+        throw new ConflictException(
+          'Cancellation request has already been processed',
+        );
+      }
 
-    await this.dataSource.transaction(async (manager) => {
-      cancellationRequest.status = CancellationRequestStatus.APPROVED;
+      if (action === CancellationDecision.APPROVE) {
+        cancellationRequest.status = CancellationRequestStatus.APPROVED;
 
-      cancellationRequest.reservation.status = ReservationStatus.CANCELLED;
+        cancellationRequest.reservation.status = ReservationStatus.CANCELLED;
 
-      await manager.save(cancellationRequest);
-      await manager.save(cancellationRequest.reservation);
+        await manager.save(cancellationRequest);
+        await manager.save(cancellationRequest.reservation);
+
+        return cancellationRequest;
+      }
+
+      if (action === CancellationDecision.REJECT) {
+        cancellationRequest.status = CancellationRequestStatus.REJECTED;
+
+        await manager.save(cancellationRequest);
+
+        return cancellationRequest;
+      }
     });
-  }
-
-  async rejectCancellationRequest(id: number) {
-    const cancellationRequest =
-      await this.cancellationRequestsRepository.findOne({
-        where: { id },
-      });
-
-    if (!cancellationRequest) {
-      throw new NotFoundException('Cancellation request not found');
-    }
-
-    if (cancellationRequest.status !== CancellationRequestStatus.PENDING) {
-      throw new BadRequestException(
-        'Cancellation request has already been processed',
-      );
-    }
-
-    cancellationRequest.status = CancellationRequestStatus.REJECTED;
-
-    await this.cancellationRequestsRepository.save(cancellationRequest);
   }
 
   private toReservationResponse(

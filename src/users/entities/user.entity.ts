@@ -9,6 +9,7 @@ import {
 import { Reservation } from '../../reservations/entities/reservation.entity';
 import { UserRole } from '../enums/user-role.enum';
 import { CancellationRequest } from '../../reservations/entities/cancellation-request.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity()
 export class User {

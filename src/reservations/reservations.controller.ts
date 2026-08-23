@@ -38,6 +38,7 @@ import { ReservationResponseDto } from './dto/responseDto/reservation-response.d
 import { ReservationListResponseDto } from './dto/responseDto/reservation-list-response.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { CurrentUserType } from '../common/types/current-user-type.type';
+import { HandleCancellationRequestDto } from './dto/requestDto/handel-cancellation.dto';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -125,28 +126,12 @@ export class ReservationsController {
     return this.reservationsService.findOne(id);
   }
 
-  @Patch('cancellation-requests/:id/approve')
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Approve cancellation request' })
-  @ApiOkResponse({
-    description: 'Cancellation request approved successfully',
-  })
-  async approveCancellationRequest(
+  @Patch('cancellation-requests/:id')
+  handleCancellationRequest(
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<void> {
-    await this.reservationsService.approveCancellationRequest(id);
-  }
-
-  @Patch('cancellation-requests/:id/reject')
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Reject cancellation request' })
-  @ApiOkResponse({
-    description: 'Cancellation request rejected successfully',
-  })
-  rejectCancellationRequest(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<void> {
-    return this.reservationsService.rejectCancellationRequest(id);
+    @Body() dto: HandleCancellationRequestDto,
+  ) {
+    return this.reservationsService.handleCancellationRequest(id, dto.action);
   }
 
   @Patch(':id')
