@@ -8,10 +8,13 @@ import {
   Max,
   Min,
 } from 'class-validator';
+
 import { Type } from 'class-transformer';
+
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 import { ReservationStatus } from '../../enums/reservation-status.enum';
+
 import { ReservationSortField } from '../../enums/reservation-sortfield';
 
 export class FilterReservationDto {
@@ -23,7 +26,7 @@ export class FilterReservationDto {
   status?: ReservationStatus;
 
   @ApiPropertyOptional({
-    example: 1,
+    minimum: 1,
   })
   @IsOptional()
   @Type(() => Number)
@@ -32,7 +35,7 @@ export class FilterReservationDto {
   userId?: number;
 
   @ApiPropertyOptional({
-    example: 2,
+    minimum: 1,
   })
   @IsOptional()
   @Type(() => Number)
@@ -41,7 +44,7 @@ export class FilterReservationDto {
   roomId?: number;
 
   @ApiPropertyOptional({
-    example: 100,
+    minimum: 0,
   })
   @IsOptional()
   @Type(() => Number)
@@ -50,7 +53,7 @@ export class FilterReservationDto {
   minTotalPrice?: number;
 
   @ApiPropertyOptional({
-    example: 1000,
+    minimum: 0,
   })
   @IsOptional()
   @Type(() => Number)
@@ -59,22 +62,21 @@ export class FilterReservationDto {
   maxTotalPrice?: number;
 
   @ApiPropertyOptional({
-    example: '2026-08-10',
+    description: 'Filter reservations from this check-in date',
   })
   @IsOptional()
   @IsDateString()
   checkIn?: string;
 
   @ApiPropertyOptional({
-    example: '2026-08-20',
+    description: 'Filter reservations until this check-out date',
   })
   @IsOptional()
   @IsDateString()
   checkOut?: string;
 
   @ApiPropertyOptional({
-    example: 1,
-    default: 1,
+    minimum: 1,
   })
   @IsOptional()
   @Type(() => Number)
@@ -83,8 +85,8 @@ export class FilterReservationDto {
   page?: number;
 
   @ApiPropertyOptional({
-    example: 10,
-    default: 10,
+    minimum: 1,
+    maximum: 100,
   })
   @IsOptional()
   @Type(() => Number)
@@ -95,7 +97,6 @@ export class FilterReservationDto {
 
   @ApiPropertyOptional({
     enum: ReservationSortField,
-    example: ReservationSortField.CHECK_IN,
   })
   @IsOptional()
   @IsEnum(ReservationSortField)
@@ -103,7 +104,6 @@ export class FilterReservationDto {
 
   @ApiPropertyOptional({
     enum: ['ASC', 'DESC'],
-    example: 'DESC',
   })
   @IsOptional()
   @IsIn(['ASC', 'DESC'])

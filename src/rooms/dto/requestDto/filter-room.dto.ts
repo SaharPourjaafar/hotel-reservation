@@ -1,4 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
+
 import {
   IsEnum,
   IsInt,
@@ -7,16 +8,17 @@ import {
   IsPositive,
   IsString,
 } from 'class-validator';
+
 import { Type } from 'class-transformer';
 
 import { RoomType } from '../../enums/room-type.enum';
 import { RoomStatus } from '../../enums/room-status.enum';
+
 import { RoomSortField } from 'src/rooms/enums/room-sortfield.enum';
 import { SortOrder } from 'src/rooms/enums/room-sortorder.enum';
 
 export class FilterRoomDto {
   @ApiPropertyOptional({
-    example: '101',
     description: 'Search by room number',
   })
   @IsOptional()
@@ -24,7 +26,7 @@ export class FilterRoomDto {
   search?: string;
 
   @ApiPropertyOptional({
-    example: 1,
+    minimum: 1,
   })
   @IsOptional()
   @Type(() => Number)
@@ -47,7 +49,7 @@ export class FilterRoomDto {
   status?: RoomStatus;
 
   @ApiPropertyOptional({
-    example: 100,
+    minimum: 0,
   })
   @IsOptional()
   @Type(() => Number)
@@ -55,7 +57,7 @@ export class FilterRoomDto {
   minPrice?: number;
 
   @ApiPropertyOptional({
-    example: 500,
+    minimum: 0,
   })
   @IsOptional()
   @Type(() => Number)
@@ -63,7 +65,7 @@ export class FilterRoomDto {
   maxPrice?: number;
 
   @ApiPropertyOptional({
-    example: 2,
+    minimum: 1,
   })
   @IsOptional()
   @Type(() => Number)
@@ -72,8 +74,7 @@ export class FilterRoomDto {
   minCapacity?: number;
 
   @ApiPropertyOptional({
-    example: 1,
-    default: 1,
+    minimum: 1,
   })
   @IsOptional()
   @Type(() => Number)
@@ -82,8 +83,7 @@ export class FilterRoomDto {
   page?: number;
 
   @ApiPropertyOptional({
-    example: 10,
-    default: 10,
+    minimum: 1,
   })
   @IsOptional()
   @Type(() => Number)
@@ -93,7 +93,6 @@ export class FilterRoomDto {
 
   @ApiPropertyOptional({
     enum: RoomSortField,
-    default: RoomSortField.ID,
   })
   @IsOptional()
   @IsEnum(RoomSortField)
@@ -101,7 +100,6 @@ export class FilterRoomDto {
 
   @ApiPropertyOptional({
     enum: SortOrder,
-    default: SortOrder.ASC,
   })
   @IsOptional()
   @IsEnum(SortOrder)

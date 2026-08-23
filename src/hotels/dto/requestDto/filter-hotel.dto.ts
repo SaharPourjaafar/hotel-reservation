@@ -7,13 +7,15 @@ import {
   Max,
   Min,
 } from 'class-validator';
+
 import { Type } from 'class-transformer';
+
 import { ApiPropertyOptional } from '@nestjs/swagger';
+
 import { HotelSortField } from '../../enums/hotel-sort-field.enum';
 
 export class FilterHotelDto {
   @ApiPropertyOptional({
-    example: 'Grand',
     description: 'Search in hotel name and description',
   })
   @IsOptional()
@@ -21,14 +23,13 @@ export class FilterHotelDto {
   search?: string;
 
   @ApiPropertyOptional({
-    example: 'Tehran',
+    description: 'Filter by city',
   })
   @IsOptional()
   @IsString()
   city?: string;
 
   @ApiPropertyOptional({
-    example: 3,
     minimum: 1,
     maximum: 5,
   })
@@ -40,7 +41,6 @@ export class FilterHotelDto {
   minStar?: number;
 
   @ApiPropertyOptional({
-    example: 5,
     minimum: 1,
     maximum: 5,
   })
@@ -52,8 +52,7 @@ export class FilterHotelDto {
   maxStar?: number;
 
   @ApiPropertyOptional({
-    example: 1,
-    default: 1,
+    minimum: 1,
   })
   @IsOptional()
   @Type(() => Number)
@@ -62,8 +61,8 @@ export class FilterHotelDto {
   page?: number;
 
   @ApiPropertyOptional({
-    example: 10,
-    default: 10,
+    minimum: 1,
+    maximum: 100,
   })
   @IsOptional()
   @Type(() => Number)
@@ -74,13 +73,13 @@ export class FilterHotelDto {
 
   @ApiPropertyOptional({
     enum: HotelSortField,
-    example: HotelSortField.STAR,
   })
   @IsOptional()
   @IsEnum(HotelSortField)
   sortBy?: HotelSortField;
+
   @ApiPropertyOptional({
-    example: 'DESC',
+    enum: ['ASC', 'DESC'],
   })
   @IsOptional()
   @IsIn(['ASC', 'DESC'])
