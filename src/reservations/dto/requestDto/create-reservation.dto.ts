@@ -8,6 +8,9 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+import { IsAfter } from 'src/common/validators/is-after.validator';
+import { IsTodayOrFuture } from 'src/common/validators/is-today-or-future.validator';
+
 export class CreateReservationDto {
   @ApiProperty({
     description: 'List of rooms to reserve',
@@ -32,11 +35,17 @@ export class CreateReservationDto {
   @ApiProperty({
     example: '2026-08-10',
   })
+  @IsTodayOrFuture({
+    message: 'Check-in date cannot be in the past',
+  })
   @IsDateString()
   checkIn!: string;
 
   @ApiProperty({
     example: '2026-08-15',
+  })
+  @IsAfter('checkIn', {
+    message: 'Check-out date must be after check-in date',
   })
   @IsDateString()
   checkOut!: string;

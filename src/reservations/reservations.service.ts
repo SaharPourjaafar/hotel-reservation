@@ -68,21 +68,6 @@ export class ReservationsService {
       const checkInDate = new Date(checkIn);
       const checkOutDate = new Date(checkOut);
 
-      // 3. بررسی ترتیب تاریخ
-      if (checkOutDate <= checkInDate) {
-        throw new BadRequestException(
-          'Check-out date must be after check-in date',
-        );
-      }
-
-      // 4. بررسی گذشته نبودن Check-in
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      if (checkInDate < today) {
-        throw new BadRequestException('Check-in date cannot be in the past');
-      }
-
       // 5. محاسبه تعداد شب‌ها
       const millisecondsPerDay = 1000 * 60 * 60 * 24;
 
