@@ -8,7 +8,6 @@ import {
   Delete,
   Query,
   ParseIntPipe,
-  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -24,13 +23,11 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/requestDto/create-user.dto';
 import { UpdateUserDto } from './dto/requestDto/update-user.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UserResponseDto } from './dto/responseDto/user-response.dto';
 import { FilterUserDto } from './dto/requestDto/filter-user.dto';
 import { UserListResponseDto } from './dto/responseDto/user-list-response.dto';
 
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {

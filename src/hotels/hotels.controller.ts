@@ -7,7 +7,6 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  UseGuards,
 } from '@nestjs/common';
 
 import {
@@ -26,14 +25,12 @@ import {
 import { HotelsService } from './hotels.service';
 import { CreateHotelDto } from './dto/requestDto/create-hotel.dto';
 import { UpdateHotelDto } from './dto/requestDto/update-hotel.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Query } from '@nestjs/common';
 import { FilterHotelDto } from './dto/requestDto/filter-hotel.dto';
 import { HotelResponseDto } from './dto/responseDto/hotel-response.dto';
 import { HotelListResponseDto } from './dto/responseDto/hotel-list-response.dto';
 
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @ApiTags('Hotels')
 @Controller('hotels')
 export class HotelsController {

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -240,11 +244,24 @@ export class RoomsService {
   }
 
   async remove(id: number) {
-    const result = await this.roomsRepository.delete(id);
+    const room = await this.roomsRepository.findOne({
+      where: { id },
+      relations: {
+        reservations: true,
+      },
+    });
 
-    if (result.affected === 0) {
+    if (!room) {
       throw new NotFoundException('Room not found');
     }
+
+    if (room.reservations.length > 0) {
+      throw new ConflictException(
+        'Cannot delete room because it has reservations',
+      );
+    }
+
+    await this.roomsRepository.delete(id);
   }
   private toRoomResponse(room: Room): RoomResponseDto {
     return {

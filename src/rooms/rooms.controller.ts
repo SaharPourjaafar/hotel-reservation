@@ -7,7 +7,6 @@ import {
   Body,
   Delete,
   Patch,
-  UseGuards,
   Query,
 } from '@nestjs/common';
 
@@ -26,14 +25,12 @@ import {
 import { RoomsService } from './rooms.service';
 import { CreateRoomDto } from './dto/requestDto/create-room.dto';
 import { UpdateRoomDto } from './dto/requestDto/update-room.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AvailableRoomDto } from './dto/requestDto/available-room.dto';
 import { RoomResponseDto } from './dto/responseDto/room-response.dto';
 import { RoomListResponseDto } from './dto/responseDto/room-list-response.dto';
 import { FilterRoomDto } from './dto/requestDto/filter-room.dto';
 
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @ApiTags('Rooms')
 @Controller('rooms')
 export class RoomsController {

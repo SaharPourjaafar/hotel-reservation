@@ -33,8 +33,6 @@ import { FilterCancellationRequestDto } from './dto/requestDto/filter-cancellati
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { UserRole } from '../users/enums/user-role.enum';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 import { ReservationResponseDto } from './dto/responseDto/reservation-response.dto';
 import { ReservationListResponseDto } from './dto/responseDto/reservation-list-response.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -42,7 +40,6 @@ import type { CurrentUserType } from '../common/types/current-user-type.type';
 import { HandleCancellationRequestDto } from './dto/requestDto/handel-cancellation.dto';
 
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @ApiTags('Reservations')
 @Controller('reservations')
 export class ReservationsController {
