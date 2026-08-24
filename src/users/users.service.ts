@@ -24,18 +24,7 @@ export class UsersService {
   ) {}
 
   async findAll(filterDto: FilterUserDto) {
-    const query = this.usersRepository
-      .createQueryBuilder('user')
-      .select([
-        'user.id',
-        'user.firstName',
-        'user.lastName',
-        'user.phoneNumber',
-        'user.email',
-        'user.role',
-        'user.createdAt',
-        'user.updatedAt',
-      ]);
+    const query = this.usersRepository.createQueryBuilder('user');
 
     if (filterDto.search) {
       query.andWhere(
@@ -137,10 +126,12 @@ export class UsersService {
     await this.usersRepository.delete(id);
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({
-      where: { email },
-    });
+  async findByEmail(email: string) {
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.email = :email', { email })
+      .getOne();
   }
 
   private toUserResponse(user: User): UserResponseDto {

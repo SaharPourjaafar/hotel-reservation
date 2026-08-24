@@ -169,28 +169,8 @@ export class ReservationsService {
   async findAll(filterDto: FilterReservationDto) {
     const query = this.reservationsRepository
       .createQueryBuilder('reservation')
-      .leftJoin('reservation.user', 'user')
-      .leftJoin('reservation.room', 'room')
-      .select([
-        'reservation.id',
-        'reservation.checkIn',
-        'reservation.checkOut',
-        'reservation.guestCount',
-        'reservation.status',
-        'reservation.totalPrice',
-
-        'user.id',
-        'user.firstName',
-        'user.lastName',
-        'user.email',
-
-        'room.id',
-        'room.roomNumber',
-        'room.type',
-        'room.capacity',
-        'room.price',
-        'room.status',
-      ]);
+      .leftJoinAndSelect('reservation.user', 'user')
+      .leftJoinAndSelect('reservation.room', 'room');
 
     // Filter by status
     if (filterDto.status) {
