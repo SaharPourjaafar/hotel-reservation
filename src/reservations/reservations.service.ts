@@ -6,30 +6,29 @@ import {
 } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 
 import { Reservation } from './entities/reservation.entity';
 import { User } from '../users/entities/user.entity';
 import { Room } from '../rooms/entities/room.entity';
+import { CancellationRequest } from './entities/cancellation-request.entity';
 
 import { CreateReservationDto } from './dto/requestDto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/requestDto/update-reservation.dto';
 import { FilterReservationDto } from './dto/requestDto/filter-reservation.dto';
+import { ReservationResponseDto } from './dto/responseDto/reservation-response.dto';
+import { FilterCancellationRequestDto } from './dto/requestDto/filter-cancellation-request.dto';
 
 import { RoomStatus } from '../rooms/enums/room-status.enum';
-
 import { ReservationSortField } from './enums/reservation-sortfield';
-
-import { ReservationResponseDto } from './dto/responseDto/reservation-response.dto';
 import { ReservationStatus } from './enums/reservation-status.enum';
+import { CancellationRequestStatus } from './enums/cancellation-request-status.enum';
+import { CancellationDecision } from './enums/cancellationDecision.enum';
+
 import {
   getPagination,
   getPaginationMeta,
 } from '../common/utils/pagination.utils';
-import { DataSource } from 'typeorm';
-import { CancellationRequest } from './entities/cancellation-request.entity';
-import { CancellationRequestStatus } from './enums/cancellation-request-status.enum';
-import { CancellationDecision } from './enums/cancellationDecision.enum';
 
 @Injectable()
 export class ReservationsService {
@@ -339,8 +338,8 @@ export class ReservationsService {
     await this.cancellationRequestsRepository.save(cancellationRequest);
   }
 
-  async findCancellationRequests() {
-    return this.cancellationRequestsRepository
+  async findCancellationRequests(filterDto: FilterCancellationRequestDto) {
+    const query = this.cancellationRequestsRepository
       .createQueryBuilder('request')
       .leftJoinAndSelect('request.user', 'user')
       .leftJoinAndSelect('request.reservation', 'reservation')
@@ -357,8 +356,15 @@ export class ReservationsService {
         'reservation.checkIn',
         'reservation.checkOut',
         'reservation.status',
-      ])
-      .getMany();
+      ]);
+
+    if (filterDto.status) {
+      query.andWhere('request.status = :status', {
+        status: filterDto.status,
+      });
+    }
+
+    return query.getMany();
   }
 
   async handleCancellationRequest(id: number, action: CancellationDecision) {

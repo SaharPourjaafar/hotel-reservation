@@ -28,6 +28,7 @@ import { ReservationsService } from './reservations.service';
 import { CreateReservationDto } from './dto/requestDto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/requestDto/update-reservation.dto';
 import { FilterReservationDto } from './dto/requestDto/filter-reservation.dto';
+import { FilterCancellationRequestDto } from './dto/requestDto/filter-cancellation-request.dto';
 
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -101,8 +102,8 @@ export class ReservationsController {
   @ApiOkResponse({
     description: 'Cancellation requests retrieved successfully',
   })
-  findCancellationRequests() {
-    return this.reservationsService.findCancellationRequests();
+  findCancellationRequests(@Query() filterDto: FilterCancellationRequestDto) {
+    return this.reservationsService.findCancellationRequests(filterDto);
   }
 
   @Get(':id')
