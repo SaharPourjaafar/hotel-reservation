@@ -29,6 +29,7 @@ import {
   getPagination,
   getPaginationMeta,
 } from '../common/utils/pagination.utils';
+import { calculateNights } from '../common/utils/date.utils';
 
 @Injectable()
 export class ReservationsService {
@@ -53,7 +54,7 @@ export class ReservationsService {
     userId: number,
   ) {
     return this.dataSource.transaction(async (manager) => {
-      // 1. پیدا کردن User
+      //  پیدا کردن User
       const userRepository = manager.getRepository(User);
 
       const user = await userRepository.findOne({
@@ -64,23 +65,16 @@ export class ReservationsService {
         throw new NotFoundException('User not found');
       }
 
-      // 2. تبدیل تاریخ‌ها
       const checkInDate = new Date(checkIn);
       const checkOutDate = new Date(checkOut);
 
-      // 5. محاسبه تعداد شب‌ها
-      const millisecondsPerDay = 1000 * 60 * 60 * 24;
-
-      const nights = Math.ceil(
-        (checkOutDate.getTime() - checkInDate.getTime()) / millisecondsPerDay,
-      );
-
+      const nights = calculateNights(checkInDate, checkOutDate);
       const roomRepository = manager.getRepository(Room);
       const reservationRepository = manager.getRepository(Reservation);
 
       const reservations: Reservation[] = [];
 
-      // 6. بررسی و ساخت Reservation برای هر اتاق
+      //  بررسی و ساخت Reservation برای هر اتاق
       for (const requestedRoom of rooms) {
         // پیدا کردن Room
         const room = await roomRepository.findOne({
@@ -145,7 +139,7 @@ export class ReservationsService {
         reservations.push(reservation);
       }
 
-      // 7. ذخیره تمام Reservationها
+      //  ذخیره تمام Reservationها
       await reservationRepository.save(reservations);
 
       return;
