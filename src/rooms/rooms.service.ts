@@ -4,7 +4,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, QueryFailedError } from 'typeorm';
 
 import { Room } from './entities/room.entity';
 import { Hotel } from '../hotels/entities/hotel.entity';
@@ -246,23 +246,29 @@ export class RoomsService {
   async remove(id: number) {
     const room = await this.roomsRepository.findOne({
       where: { id },
-      relations: {
-        reservations: true,
-      },
     });
 
     if (!room) {
       throw new NotFoundException('Room not found');
     }
 
-    if (room.reservations.length > 0) {
-      throw new ConflictException(
-        'Cannot delete room because it has reservations',
-      );
-    }
+    try {
+      await this.roomsRepository.delete(id);
+    } catch (error: unknown) {
+      if (error instanceof QueryFailedError) {
+        const driverError = error.driverError as { errno?: number };
 
-    await this.roomsRepository.delete(id);
+        if (driverError.errno === 1451) {
+          throw new ConflictException(
+            'Cannot delete room because it has reservations',
+          );
+        }
+      }
+
+      throw error;
+    }
   }
+
   private toRoomResponse(room: Room): RoomResponseDto {
     return {
       id: room.id,

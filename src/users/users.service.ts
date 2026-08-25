@@ -4,7 +4,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, QueryFailedError } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { User } from './entities/user.entity';
@@ -108,22 +108,27 @@ export class UsersService {
   async remove(id: number): Promise<void> {
     const user = await this.usersRepository.findOne({
       where: { id },
-      relations: {
-        reservations: true,
-      },
     });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    if (user.reservations.length > 0) {
-      throw new ConflictException(
-        'Cannot delete user because the user has existing reservations.',
-      );
-    }
+    try {
+      await this.usersRepository.delete(id);
+    } catch (error: unknown) {
+      if (error instanceof QueryFailedError) {
+        const driverError = error.driverError as { errno?: number };
 
-    await this.usersRepository.delete(id);
+        if (driverError.errno === 1451) {
+          throw new ConflictException(
+            'Cannot delete user because the user has existing reservations.',
+          );
+        }
+      }
+
+      throw error;
+    }
   }
 
   async findByEmail(email: string) {
