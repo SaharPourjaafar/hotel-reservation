@@ -55,7 +55,6 @@ export class ReservationsService {
     userId: number,
   ) {
     return this.dataSource.transaction(async (manager) => {
-      //  پیدا کردن User
       const userRepository = manager.getRepository(User);
 
       const user = await userRepository.findOne({
@@ -70,13 +69,15 @@ export class ReservationsService {
       const checkOutDate = new Date(checkOut);
 
       const nights = calculateNights(checkInDate, checkOutDate);
+
       const roomRepository = manager.getRepository(Room);
       const reservationRepository = manager.getRepository(Reservation);
       const reservationRoomRepository = manager.getRepository(ReservationRoom);
 
       let totalPrice = 0;
-      const reservations: Reservation[] = [];
+
       const reservationRoomRecords: ReservationRoom[] = [];
+
       const reservation = reservationRepository.create({
         user,
         checkIn: checkInDate,
@@ -84,9 +85,10 @@ export class ReservationsService {
         status: ReservationStatus.PENDING,
         totalPrice: 0,
       });
-      //  بررسی و ساخت Reservation برای هر اتاق
+
+      const savedReservation = await reservationRepository.save(reservation);
+
       for (const requestedRoom of rooms) {
-        // پیدا کردن Room
         const room = await roomRepository.findOne({
           where: { id: requestedRoom.roomId },
         });
@@ -95,24 +97,22 @@ export class ReservationsService {
           throw new NotFoundException(`Room ${requestedRoom.roomId} not found`);
         }
 
-        // بررسی وضعیت اتاق
         if (room.status !== RoomStatus.AVAILABLE) {
           throw new BadRequestException(
             `Room ${room.roomNumber} is not available`,
           );
         }
 
-        // بررسی ظرفیت
         if (requestedRoom.guestCount > room.capacity) {
           throw new BadRequestException(
             `Guest count exceeds room capacity for room ${room.roomNumber}`,
           );
         }
 
-        // بررسی تداخل رزرو
         const overlappingReservation = await reservationRepository
           .createQueryBuilder('reservation')
-          .where('reservation.roomId = :roomId', {
+          .innerJoin('reservation.reservationRooms', 'reservationRoom')
+          .where('reservationRoom.roomId = :roomId', {
             roomId: room.id,
           })
           .andWhere('reservation.checkIn < :checkOut', {
@@ -132,26 +132,24 @@ export class ReservationsService {
           );
         }
 
-        // محاسبه قیمت این اتاق
         const roomPrice = nights * Number(room.price);
 
         totalPrice += roomPrice;
 
         const reservationRoom = reservationRoomRepository.create({
-          reservation,
+          reservation: savedReservation,
           room,
           guestCount: requestedRoom.guestCount,
         });
-        reservations.push(reservation);
+
         reservationRoomRecords.push(reservationRoom);
       }
 
       reservation.totalPrice = totalPrice;
-      await reservationRepository.save(reservation);
-      await reservationRoomRepository.save(reservationRoomRecords);
 
-      //  ذخیره تمام Reservationها
-      await reservationRepository.save(reservations);
+      await reservationRepository.save(reservation);
+
+      await reservationRoomRepository.save(reservationRoomRecords);
 
       return;
     });

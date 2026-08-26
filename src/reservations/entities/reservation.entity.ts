@@ -39,9 +39,6 @@ export class Reservation {
   @Column({ type: 'date' })
   checkOut!: Date;
 
-  @Column()
-  guestCount!: number;
-
   @Column({
     type: 'enum',
     enum: ReservationStatus,
