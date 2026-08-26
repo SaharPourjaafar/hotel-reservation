@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 import { RoomType } from '../../../rooms/enums/room-type.enum';
 import { RoomStatus } from '../../../rooms/enums/room-status.enum';
 
@@ -24,4 +25,7 @@ export class ReservationRoomResponseDto {
     enum: RoomStatus,
   })
   status!: RoomStatus;
+
+  @ApiProperty()
+  guestCount!: number;
 }

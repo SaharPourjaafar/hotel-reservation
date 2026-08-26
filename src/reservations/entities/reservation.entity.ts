@@ -8,9 +8,9 @@ import {
 } from 'typeorm';
 
 import { User } from '../../users/entities/user.entity';
-import { Room } from '../../rooms/entities/room.entity';
 import { ReservationStatus } from '../enums/reservation-status.enum';
 import { CancellationRequest } from './cancellation-request.entity';
+import { ReservationRoom } from './reservation-room.entity';
 
 @Entity()
 export class Reservation {
@@ -21,9 +21,11 @@ export class Reservation {
   @JoinColumn({ name: 'userId' })
   user!: User;
 
-  @ManyToOne(() => Room, (room) => room.reservations)
-  @JoinColumn({ name: 'roomId' })
-  room!: Room;
+  @OneToMany(
+    () => ReservationRoom,
+    (reservationRoom) => reservationRoom.reservation,
+  )
+  reservationRooms!: ReservationRoom[];
 
   @OneToMany(
     () => CancellationRequest,

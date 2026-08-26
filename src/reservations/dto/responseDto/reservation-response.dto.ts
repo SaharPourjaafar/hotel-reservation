@@ -13,9 +13,6 @@ export class ReservationResponseDto {
   @ApiProperty()
   checkOut!: Date;
 
-  @ApiProperty()
-  guestCount!: number;
-
   @ApiProperty({
     enum: ReservationStatus,
   })
@@ -30,7 +27,7 @@ export class ReservationResponseDto {
   user!: ReservationUserResponseDto;
 
   @ApiProperty({
-    type: () => ReservationRoomResponseDto,
+    type: () => [ReservationRoomResponseDto],
   })
-  room!: ReservationRoomResponseDto;
+  rooms!: ReservationRoomResponseDto[];
 }

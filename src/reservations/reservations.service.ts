@@ -12,6 +12,7 @@ import { Reservation } from './entities/reservation.entity';
 import { User } from '../users/entities/user.entity';
 import { Room } from '../rooms/entities/room.entity';
 import { CancellationRequest } from './entities/cancellation-request.entity';
+import { ReservationRoom } from './entities/reservation-room.entity';
 
 import { CreateReservationDto } from './dto/requestDto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/requestDto/update-reservation.dto';
@@ -71,9 +72,18 @@ export class ReservationsService {
       const nights = calculateNights(checkInDate, checkOutDate);
       const roomRepository = manager.getRepository(Room);
       const reservationRepository = manager.getRepository(Reservation);
+      const reservationRoomRepository = manager.getRepository(ReservationRoom);
 
+      let totalPrice = 0;
       const reservations: Reservation[] = [];
-
+      const reservationRoomRecords: ReservationRoom[] = [];
+      const reservation = reservationRepository.create({
+        user,
+        checkIn: checkInDate,
+        checkOut: checkOutDate,
+        status: ReservationStatus.PENDING,
+        totalPrice: 0,
+      });
       //  بررسی و ساخت Reservation برای هر اتاق
       for (const requestedRoom of rooms) {
         // پیدا کردن Room
@@ -123,21 +133,22 @@ export class ReservationsService {
         }
 
         // محاسبه قیمت این اتاق
-        const totalPrice = nights * Number(room.price);
+        const roomPrice = nights * Number(room.price);
 
-        // ساخت Reservation
-        const reservation = reservationRepository.create({
-          user,
+        totalPrice += roomPrice;
+
+        const reservationRoom = reservationRoomRepository.create({
+          reservation,
           room,
-          checkIn: checkInDate,
-          checkOut: checkOutDate,
           guestCount: requestedRoom.guestCount,
-          status: ReservationStatus.PENDING,
-          totalPrice,
         });
-
         reservations.push(reservation);
+        reservationRoomRecords.push(reservationRoom);
       }
+
+      reservation.totalPrice = totalPrice;
+      await reservationRepository.save(reservation);
+      await reservationRoomRepository.save(reservationRoomRecords);
 
       //  ذخیره تمام Reservationها
       await reservationRepository.save(reservations);
@@ -149,7 +160,9 @@ export class ReservationsService {
     const query = this.reservationsRepository
       .createQueryBuilder('reservation')
       .leftJoinAndSelect('reservation.user', 'user')
-      .leftJoinAndSelect('reservation.room', 'room');
+      .leftJoinAndSelect('reservation.reservationRooms', 'reservationRoom')
+      .leftJoinAndSelect('reservationRoom.room', 'room')
+      .leftJoinAndSelect('room.hotel', 'hotel');
 
     // Filter by status
     if (filterDto.status) {
@@ -167,7 +180,7 @@ export class ReservationsService {
 
     // Filter by room
     if (filterDto.roomId !== undefined) {
-      query.andWhere('reservation.roomId = :roomId', {
+      query.andWhere('reservationRoom.roomId = :roomId', {
         roomId: filterDto.roomId,
       });
     }
@@ -226,7 +239,8 @@ export class ReservationsService {
     const reservation = await this.reservationsRepository
       .createQueryBuilder('reservation')
       .leftJoinAndSelect('reservation.user', 'user')
-      .leftJoinAndSelect('reservation.room', 'room')
+      .leftJoinAndSelect('reservation.reservationRooms', 'reservationRoom')
+      .leftJoinAndSelect('reservationRoom.room', 'room')
       .leftJoinAndSelect('room.hotel', 'hotel')
       .where('reservation.id = :id', { id })
       .getOne();
@@ -376,8 +390,6 @@ export class ReservationsService {
 
       checkOut: reservation.checkOut,
 
-      guestCount: reservation.guestCount,
-
       status: reservation.status,
 
       totalPrice: Number(reservation.totalPrice),
@@ -389,14 +401,15 @@ export class ReservationsService {
         email: reservation.user.email,
       },
 
-      room: {
-        id: reservation.room.id,
-        roomNumber: reservation.room.roomNumber,
-        type: reservation.room.type,
-        capacity: reservation.room.capacity,
-        price: Number(reservation.room.price),
-        status: reservation.room.status,
-      },
+      rooms: reservation.reservationRooms.map((reservationRoom) => ({
+        id: reservationRoom.room.id,
+        roomNumber: reservationRoom.room.roomNumber,
+        type: reservationRoom.room.type,
+        capacity: reservationRoom.room.capacity,
+        price: Number(reservationRoom.room.price),
+        status: reservationRoom.room.status,
+        guestCount: reservationRoom.guestCount,
+      })),
     };
   }
 }

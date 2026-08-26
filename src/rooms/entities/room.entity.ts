@@ -9,7 +9,7 @@ import {
 import { Hotel } from '../../hotels/entities/hotel.entity';
 import { RoomType } from '../enums/room-type.enum';
 import { RoomStatus } from '../enums/room-status.enum';
-import { Reservation } from '../../reservations/entities/reservation.entity';
+import { ReservationRoom } from '../../reservations/entities/reservation-room.entity';
 
 @Entity()
 export class Room {
@@ -41,6 +41,6 @@ export class Room {
   @JoinColumn({ name: 'hotelId' })
   hotel!: Hotel;
 
-  @OneToMany(() => Reservation, (reservation) => reservation.room)
-  reservations!: Reservation[];
+  @OneToMany(() => ReservationRoom, (reservationRoom) => reservationRoom.room)
+  reservationRooms!: ReservationRoom[];
 }
