@@ -151,4 +151,10 @@ export class UsersService {
       updatedAt: user.updatedAt,
     };
   }
+
+  async updatePassword(user: User, newPassword: string): Promise<User> {
+    user.password = await bcrypt.hash(newPassword, 10);
+
+    return this.usersRepository.save(user);
+  }
 }

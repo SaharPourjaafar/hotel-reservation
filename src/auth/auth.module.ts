@@ -8,11 +8,15 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SignOptions } from 'jsonwebtoken';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
+import { OtpModule } from '../otp/otp.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     UsersModule,
+    OtpModule,
+    MailModule,
 
     JwtModule.registerAsync({
       imports: [ConfigModule],

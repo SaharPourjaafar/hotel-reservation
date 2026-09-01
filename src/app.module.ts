@@ -11,9 +11,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { RedisModule } from './redis/redis.module';
+import { OtpModule } from './otp/otp.module';
 
 @Module({
   imports: [
+    RedisModule,
+    OtpModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
