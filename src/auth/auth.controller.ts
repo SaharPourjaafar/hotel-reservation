@@ -21,16 +21,6 @@ export class AuthController {
   ) {}
 
   @Public()
-  @Post('test-email')
-  async testEmail(): Promise<{ message: string }> {
-    await this.mailService.sendOtp('saharp51022@gmail.com', '123456');
-
-    return {
-      message: 'Email sent successfully',
-    };
-  }
-
-  @Public()
   @Post('register')
   register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
