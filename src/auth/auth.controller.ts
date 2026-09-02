@@ -1,7 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 
 import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
 import { RegisterRequestOtpDto } from './dto/register-request-otp.dto';
@@ -19,12 +18,6 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly mailService: MailService,
   ) {}
-
-  @Public()
-  @Post('register')
-  register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
-  }
 
   @Public()
   @Post('login')

@@ -10,7 +10,6 @@ import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 
 import { UsersService } from '../users/users.service';
-import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordRequestOtpDto } from './dto/forgot-password-request-otp.dto';
 import { VerifyForgotPasswordOtpDto } from './dto/verify-forgot-password-otp.dto';
@@ -33,12 +32,6 @@ export class AuthService {
 
   private getRegisterKey(email: string): string {
     return `auth:register:${email.trim().toLowerCase()}`;
-  }
-
-  async register(registerDto: RegisterDto): Promise<void> {
-    await this.usersService.create({
-      ...registerDto,
-    });
   }
 
   async login(loginDto: LoginDto) {
