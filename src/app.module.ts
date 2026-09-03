@@ -14,9 +14,12 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RedisModule } from './redis/redis.module';
 import { OtpModule } from './otp/otp.module';
 import { FileStorageModule } from './file-storage/file-storage.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
+
     RedisModule,
     OtpModule,
     ConfigModule.forRoot({

@@ -5,10 +5,10 @@ import {
 } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 
 import { File, FileStatus } from './entities/file.entity';
-
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 
@@ -68,5 +68,29 @@ export class FileStorageService {
     file.status = FileStatus.PERMANENT;
 
     return this.fileRepository.save(file);
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async cleanupTempFiles(): Promise<void> {
+    const expirationTime = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const tempFiles = await this.fileRepository.find({
+      where: {
+        status: FileStatus.TEMP,
+        createdAt: LessThan(expirationTime),
+      },
+    });
+
+    for (const file of tempFiles) {
+      const filePath = join(process.cwd(), file.path);
+
+      try {
+        await fs.unlink(filePath);
+      } catch {
+        // File may already be deleted
+      }
+
+      await this.fileRepository.remove(file);
+    }
   }
 }
