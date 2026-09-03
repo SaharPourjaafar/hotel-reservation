@@ -29,6 +29,8 @@ import { AvailableRoomDto } from './dto/requestDto/available-room.dto';
 import { RoomResponseDto } from './dto/responseDto/room-response.dto';
 import { RoomListResponseDto } from './dto/responseDto/room-list-response.dto';
 import { FilterRoomDto } from './dto/requestDto/filter-room.dto';
+import { AddRoomImagesDto } from './dto/requestDto/add-room-images.dto';
+import { RoomImage } from './entities/room-image.entity';
 
 @ApiBearerAuth()
 @ApiTags('Rooms')
@@ -107,6 +109,25 @@ export class RoomsController {
   })
   async create(@Body() createRoomDto: CreateRoomDto): Promise<void> {
     await this.roomsService.create(createRoomDto);
+  }
+
+  @Post(':id/images')
+  @ApiOperation({ summary: 'Add images to a room' })
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: 'Room images added successfully',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid file IDs',
+  })
+  @ApiNotFoundResponse({
+    description: 'Room or file not found',
+  })
+  async addImages(
+    @Param('id', ParseIntPipe) roomId: number,
+    @Body() addRoomImagesDto: AddRoomImagesDto,
+  ): Promise<RoomImage[]> {
+    return this.roomsService.addImages(roomId, addRoomImagesDto);
   }
 
   @Patch(':id')

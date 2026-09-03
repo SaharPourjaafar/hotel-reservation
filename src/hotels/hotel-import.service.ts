@@ -1,15 +1,16 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as XLSX from 'xlsx';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
-import { Hotel } from '../../hotels/entities/hotel.entity';
+import { Hotel } from './entities/hotel.entity';
 
 @Injectable()
 export class HotelImportService {
   constructor(
     @InjectRepository(Hotel)
     private readonly hotelRepository: Repository<Hotel>,
+    private readonly dataSource: DataSource,
   ) {}
   readExcel(file: Buffer) {
     const workbook = XLSX.read(file, {
@@ -67,18 +68,20 @@ export class HotelImportService {
     });
   }
   private async saveHotels(data: unknown[]) {
-    const hotels = data.map((row) => {
-      const hotel = row as Record<string, unknown>;
+    return this.dataSource.transaction(async (manager) => {
+      const hotels = data.map((row) => {
+        const hotel = row as Record<string, unknown>;
 
-      return this.hotelRepository.create({
-        name: hotel.name as string,
-        description: hotel.description as string,
-        address: hotel.address as string,
-        city: hotel.city as string,
-        star: hotel.star as number,
+        return manager.create(Hotel, {
+          name: hotel.name as string,
+          description: hotel.description as string,
+          address: hotel.address as string,
+          city: hotel.city as string,
+          star: hotel.star as number,
+        });
       });
-    });
 
-    return this.hotelRepository.save(hotels);
+      return manager.save(Hotel, hotels);
+    });
   }
 }

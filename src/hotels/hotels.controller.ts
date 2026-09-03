@@ -7,11 +7,15 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 
 import {
   ApiOperation,
   ApiTags,
+  ApiBody,
+  ApiConsumes,
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
@@ -21,6 +25,7 @@ import {
   ApiConflictResponse,
   ApiInternalServerErrorResponse,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 import { HotelsService } from './hotels.service';
 import { CreateHotelDto } from './dto/requestDto/create-hotel.dto';
@@ -29,13 +34,16 @@ import { Query } from '@nestjs/common';
 import { FilterHotelDto } from './dto/requestDto/filter-hotel.dto';
 import { HotelResponseDto } from './dto/responseDto/hotel-response.dto';
 import { HotelListResponseDto } from './dto/responseDto/hotel-list-response.dto';
+import { HotelImportService } from './hotel-import.service';
 
 @ApiBearerAuth()
 @ApiTags('Hotels')
 @Controller('hotels')
 export class HotelsController {
-  constructor(private readonly hotelsService: HotelsService) {}
-
+  constructor(
+    private readonly hotelsService: HotelsService,
+    private readonly hotelImportService: HotelImportService,
+  ) {}
   @Get()
   @ApiOperation({ summary: 'Get hotels' })
   @ApiOkResponse({
@@ -70,6 +78,24 @@ export class HotelsController {
   })
   async create(@Body() createHotelDto: CreateHotelDto): Promise<void> {
     await this.hotelsService.create(createHotelDto);
+  }
+
+  @Post('import')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  importHotels(@UploadedFile() file: Express.Multer.File) {
+    return this.hotelImportService.readExcel(file.buffer);
   }
 
   @Get(':id')

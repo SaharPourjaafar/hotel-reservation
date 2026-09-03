@@ -15,6 +15,10 @@ import { AvailableRoomDto } from './dto/requestDto/available-room.dto';
 import { ReservationStatus } from '../reservations/enums/reservation-status.enum';
 import { RoomResponseDto } from './dto/responseDto/room-response.dto';
 import { FilterRoomDto } from './dto/requestDto/filter-room.dto';
+import { RoomImage } from './entities/room-image.entity';
+import { FileStorageService } from '../file-storage/file-storage.service';
+import { AddRoomImagesDto } from './dto/requestDto/add-room-images.dto';
+
 import {
   getPagination,
   getPaginationMeta,
@@ -30,6 +34,11 @@ export class RoomsService {
 
     @InjectRepository(Hotel)
     private readonly hotelsRepository: Repository<Hotel>,
+
+    @InjectRepository(RoomImage)
+    private readonly roomImagesRepository: Repository<RoomImage>,
+
+    private readonly fileStorageService: FileStorageService,
   ) {}
 
   async findAll(filterDto: FilterRoomDto) {
@@ -279,5 +288,36 @@ export class RoomsService {
       status: room.status,
       hotelId: room.hotel.id,
     };
+  }
+
+  async addImages(
+    roomId: number,
+    addRoomImagesDto: AddRoomImagesDto,
+  ): Promise<RoomImage[]> {
+    const room = await this.roomsRepository.findOne({
+      where: { id: roomId },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    const roomImages: RoomImage[] = [];
+
+    for (const fileId of addRoomImagesDto.fileIds) {
+      const file = await this.fileStorageService.moveToPermanent(
+        fileId,
+        'rooms',
+      );
+
+      const roomImage = this.roomImagesRepository.create({
+        room,
+        file,
+      });
+
+      roomImages.push(roomImage);
+    }
+
+    return this.roomImagesRepository.save(roomImages);
   }
 }

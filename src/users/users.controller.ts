@@ -20,12 +20,15 @@ import {
   ApiConflictResponse,
   ApiInternalServerErrorResponse,
 } from '@nestjs/swagger';
+import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/requestDto/create-user.dto';
 import { UpdateUserDto } from './dto/requestDto/update-user.dto';
 import { UserResponseDto } from './dto/responseDto/user-response.dto';
 import { FilterUserDto } from './dto/requestDto/filter-user.dto';
 import { UserListResponseDto } from './dto/responseDto/user-list-response.dto';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { CreateProfileDto } from './dto/requestDto/create-profile.dto';
 
 @ApiBearerAuth()
 @ApiTags('Users')
@@ -65,6 +68,30 @@ export class UsersController {
   })
   async create(@Body() createUserDto: CreateUserDto): Promise<void> {
     await this.usersService.create(createUserDto);
+  }
+
+  @Post('profile')
+  @ApiOperation({ summary: 'Create or update user profile' })
+  @ApiOkResponse({
+    description: 'Profile updated successfully',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid profile data',
+  })
+  @ApiNotFoundResponse({
+    description: 'User or file not found',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error',
+  })
+  async createProfile(
+    @CurrentUser() user: { id: number },
+    @Body() createProfileDto: CreateProfileDto,
+  ): Promise<User> {
+    return this.usersService.createProfile(user.id, createProfileDto);
   }
 
   @Get(':id')

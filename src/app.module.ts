@@ -13,6 +13,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RedisModule } from './redis/redis.module';
 import { OtpModule } from './otp/otp.module';
+import { FileStorageModule } from './file-storage/file-storage.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { OtpModule } from './otp/otp.module';
     RoomsModule,
     ReservationsModule,
     AuthModule,
+    FileStorageModule,
   ],
 
   providers: [

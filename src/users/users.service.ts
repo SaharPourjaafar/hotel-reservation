@@ -11,6 +11,8 @@ import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/requestDto/update-user.dto';
 import { UserResponseDto } from './dto/responseDto/user-response.dto';
 import { FilterUserDto, UserSortField } from './dto/requestDto/filter-user.dto';
+import { FileStorageService } from '../file-storage/file-storage.service';
+import { CreateProfileDto } from './dto/requestDto/create-profile.dto';
 import {
   getPagination,
   getPaginationMeta,
@@ -21,6 +23,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+
+    private readonly fileStorageService: FileStorageService,
   ) {}
 
   async findAll(filterDto: FilterUserDto) {
@@ -154,6 +158,34 @@ export class UsersService {
 
   async updatePassword(user: User, newPassword: string): Promise<User> {
     user.password = await bcrypt.hash(newPassword, 10);
+
+    return this.usersRepository.save(user);
+  }
+
+  async createProfile(
+    userId: number,
+    createProfileDto: CreateProfileDto,
+  ): Promise<User> {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (createProfileDto.avatarFileId) {
+      const file = await this.fileStorageService.moveToPermanent(
+        createProfileDto.avatarFileId,
+        'profiles',
+      );
+
+      user.avatarFileId = file.id;
+    }
+
+    if (createProfileDto.bio !== undefined) {
+      user.bio = createProfileDto.bio;
+    }
 
     return this.usersRepository.save(user);
   }

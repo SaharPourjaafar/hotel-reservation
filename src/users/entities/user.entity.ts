@@ -2,6 +2,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToOne,
+  JoinColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   OneToMany,
@@ -10,6 +12,7 @@ import { Reservation } from '../../reservations/entities/reservation.entity';
 import { UserRole } from '../enums/user-role.enum';
 import { CancellationRequest } from '../../reservations/entities/cancellation-request.entity';
 import { Exclude } from 'class-transformer';
+import { File } from '../../file-storage/entities/file.entity';
 
 @Entity()
 export class User {
@@ -44,6 +47,9 @@ export class User {
   @UpdateDateColumn()
   updatedAt!: Date;
 
+  @Column({ type: 'text', nullable: true })
+  bio!: string | null;
+
   @OneToMany(() => Reservation, (reservation) => reservation.user)
   reservations!: Reservation[];
 
@@ -52,4 +58,11 @@ export class User {
     (cancellationRequest) => cancellationRequest.user,
   )
   cancellationRequests!: CancellationRequest[];
+
+  @Column({ nullable: true })
+  avatarFileId!: number | null;
+
+  @OneToOne(() => File, { nullable: true })
+  @JoinColumn({ name: 'avatarFileId' })
+  avatar!: File | null;
 }
