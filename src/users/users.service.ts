@@ -189,4 +189,20 @@ export class UsersService {
 
     return this.usersRepository.save(user);
   }
+
+  async getAvatar(userId: number) {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!user.avatarFileId) {
+      throw new NotFoundException('User does not have an avatar');
+    }
+
+    return this.fileStorageService.getAvatar(user.avatarFileId);
+  }
 }

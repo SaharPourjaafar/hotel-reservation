@@ -93,4 +93,31 @@ export class FileStorageService {
       await this.fileRepository.remove(file);
     }
   }
+
+  async getAvatar(fileId: number): Promise<{
+    buffer: Buffer;
+    mimeType: string;
+    originalName: string;
+  }> {
+    const file = await this.fileRepository.findOne({
+      where: {
+        id: fileId,
+        status: FileStatus.PERMANENT,
+      },
+    });
+
+    if (!file) {
+      throw new NotFoundException('Avatar file not found');
+    }
+
+    const filePath = join(process.cwd(), file.path);
+
+    const buffer = await fs.readFile(filePath);
+
+    return {
+      buffer,
+      mimeType: file.mimeType,
+      originalName: file.originalName,
+    };
+  }
 }

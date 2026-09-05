@@ -7,6 +7,7 @@ import {
   Patch,
   Delete,
   Query,
+  StreamableFile,
   ParseIntPipe,
 } from '@nestjs/common';
 import {
@@ -20,6 +21,7 @@ import {
   ApiConflictResponse,
   ApiInternalServerErrorResponse,
 } from '@nestjs/swagger';
+import { Response } from 'express';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/requestDto/create-user.dto';
@@ -92,6 +94,39 @@ export class UsersController {
     @Body() createProfileDto: CreateProfileDto,
   ): Promise<User> {
     return this.usersService.createProfile(user.id, createProfileDto);
+  }
+
+  @Get(':id/avatar')
+  @ApiOperation({ summary: 'Get user avatar' })
+  @ApiOkResponse({
+    description: 'User avatar',
+    content: {
+      'image/jpeg': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+      'image/png': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'User or avatar not found',
+  })
+  async getAvatar(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<StreamableFile> {
+    const avatar = await this.usersService.getAvatar(id);
+
+    return new StreamableFile(avatar.buffer, {
+      type: avatar.mimeType,
+      disposition: `inline; filename="${avatar.originalName}"`,
+    });
   }
 
   @Get(':id')
