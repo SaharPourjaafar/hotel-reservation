@@ -15,6 +15,7 @@ import { RedisModule } from './redis/redis.module';
 import { OtpModule } from './otp/otp.module';
 import { FileStorageModule } from './file-storage/file-storage.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { BackupModule } from './backup/backup.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ReservationsModule,
     AuthModule,
     FileStorageModule,
+    BackupModule,
   ],
 
   providers: [
